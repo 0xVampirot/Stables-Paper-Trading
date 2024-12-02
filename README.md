@@ -44,11 +44,9 @@ The bot will fetch simulated market prices and execute trades based on the defin
 - Selling: The bot will sell stablecoins when the market price is greater than 1. It calculates the amount to sell as 80% of USDT currently held in the portfolio.
 - Profit and Loss Calculation: After each sell transaction, the bot calculates profit or loss based on the average cost of stablecoins sold compared to their selling price.
 
-## Future Enhancements
-- Integrate real-time market data from a DEX API.
-- Implement more advanced trading strategies.
+## Next Steps
+- Use hot wallet to test with test tokens.
 - Add logging functionality for better tracking of trades and performance.
-- reate a user interface for easier interaction with the bot.
 
 ### License
 This project is licensed under the MIT License - see the LICENSE file for details.
