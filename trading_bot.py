@@ -16,7 +16,9 @@ class StableTradingBot:
         if from_token == 'USDC':
             amount_received = amount * price  # Simulate receiving USDT
         elif from_token == 'USDT':
-            amount_received = amount / price  # Simulate receiving USDC
+            amount_received = amount * price  # Simulate receiving USDC
+        elif from_token == 'DAI':
+            amount_received = amount * price  # Simulate receiving DAI
         else:
             raise ValueError("Invalid token for swap simulation.")
 
@@ -36,7 +38,7 @@ class StableTradingBot:
         # Check if the gain is less than the gas cost
         gain = estimated_amount_after_gas - amount  # Gain calculated as the amount received minus the amount swapped
         if gain < gas_cost_usdc:
-            logging.error("Gas is too high to trade.")
+            logging.error(f"Gas is too high to trade.Gas cost: {gas_cost_eth:.4f} ETH ({gas_cost_usdc:.4f} USDC)")
             return  # Exit the method without performing the swap
 
         # Update the wallet balances
@@ -55,28 +57,64 @@ class StableTradingBot:
         logging.info(f"Simulated swap: {amount:.4f} {from_token} to {estimated_amount_after_gas:.4f} {to_token} at price {price:.4f}")
         logging.info(f"Profit/Loss from swap: {profit_loss:.4f} ({gain:.4f} - {gas_cost_usdc:.4f})")
         logging.info(f"Total Profit/Loss: {self.total_profit_loss:.4f} USDT | Successful Trades: {self.successful_trades_count}")  # Log total profit/loss and successful trades count
-
+        # Log ending wallet balances
+        logging.info(f"Ending Wallet Balance: USDC: {self.wallet.balances['USDC'] / 1e6:.4f}, USDT: {self.wallet.balances['USDT'] / 1e6:.4f}, DAI: {self.wallet.balances['DAI'] / 1e6:.4f}\n")
+    
+    
     def simulate_trade(self):
         # Constants for trading conditions
         MIN_BALANCE = 1.00
-        PRICE_THRESHOLD = 1.00
+        PRICE_THRESHOLD = 1.0000
+        funding_token = None
 
-        # Determine which market pair to fetch based on balances
-        market_pair = "USDC/USDT"
-        price = fetch_market_price(market_pair)  # Use the imported function
-        logging.info(f"Fetching market price for {market_pair}: {price:.4f}")
-        logging.info(f"Starting Wallet Balance: USDT: {self.wallet.balances['USDT'] / 1e6:.4f}, USDC: {self.wallet.balances['USDC'] / 1e6:.4f}")
+        highest_balance_token = max(self.wallet.balances, key=lambda k: self.wallet.balances[k])  # Get the token with the highest balance
+        logging.info(f"Highest balance token: {highest_balance_token} ")
+        
+        # Log starting wallet balances
+        logging.info(f"Starting Wallet Balance: USDC: {self.wallet.balances['USDC'] / 1e6:.4f}, USDT: {self.wallet.balances['USDT'] / 1e6:.4f}, DAI: {self.wallet.balances['DAI'] / 1e6:.4f}")
 
-        # Check if the price is exactly 1.00
-        if round(price, 4) == PRICE_THRESHOLD:
-            logging.info("Price is exactly 1.0000. No trades will take place.")
-            return  # Exit the method to prevent any trades
+        # Fetch market prices based on the highest balance token
+        if highest_balance_token == 'USDC':
+            funding_token = 'USDC'
+            price_usdt = fetch_market_price("USDC/USDT")
+            price_dai = fetch_market_price("USDC/DAI")
+            if price_usdt >= PRICE_THRESHOLD or price_dai >= PRICE_THRESHOLD:
+                best_price = max(price_usdt, price_dai)
+                logging.info(f"Market prices fetched: {funding_token}/USDT: {price_usdt:.4f}, {funding_token}/DAI: {price_dai:.4f}")
+            else:
+                logging.info(f"No favorable prices for swapping {funding_token}. Market prices fetched: {funding_token}/USDT: {price_usdt:.4f}, {funding_token}/DAI: {price_dai:.4f}")
+                return  # Exit if no favorable prices
 
-        # Determine the funding token based on the price
-        if price > PRICE_THRESHOLD:
-            funding_token = 'USDC'  # Swap USDC to USDT
+        elif highest_balance_token == 'USDT':
+            funding_token = 'USDT'
+            price_usdc = fetch_market_price("USDT/USDC")
+            price_dai = fetch_market_price("USDT/DAI")
+            if price_usdc >= PRICE_THRESHOLD or price_dai >= PRICE_THRESHOLD:
+                best_price = max(price_usdc, price_dai)
+                logging.info(f"Market prices fetched: {funding_token}/USDC: {price_usdc:.4f}, {funding_token}/DAI: {price_dai:.4f}")
+            else:
+                logging.info(f"No favorable prices for swapping {funding_token}. Market prices fetched: {funding_token}/USDC: {price_usdc:.4f}, {funding_token}/DAI: {price_dai:.4f}")
+                return  # Exit if no favorable prices
+
+        elif highest_balance_token == 'DAI':
+            funding_token = 'DAI'
+            price_usdt = fetch_market_price("DAI/USDT")
+            price_usdc = fetch_market_price("DAI/USDC")
+            if price_usdt >= PRICE_THRESHOLD or price_usdc >= PRICE_THRESHOLD:
+                best_price = max(price_usdt, price_usdc)
+                logging.info(f"Market prices fetched: {funding_token}/USDT: {price_usdt:.4f}, {funding_token}/USDC: {price_usdc:.4f}")
+            else:
+                logging.info(f"No favorable prices for swapping {funding_token}. Market prices fetched: {funding_token}/USDT: {price_usdt:.4f}, {funding_token}/USDC: {price_usdc:.4f}\n")
+                return  # Exit if no favorable prices
+
         else:
-            funding_token = 'USDT'  # Swap USDT to USDC
+            logging.error("No valid tokens available for trading.")
+            return  # Exit if no valid tokens
+
+        # Check if the best price is greater than 1.0000 before proceeding with the swap
+        if best_price <= PRICE_THRESHOLD:
+            logging.info("Best price is not favorable for trading. No trades will take place.")
+            return  # Exit the method to prevent any trades
 
         logging.info(f"Using funding token: {funding_token}")
 
@@ -87,14 +125,20 @@ class StableTradingBot:
 
         # Trading logic based on the funding token
         if funding_token == 'USDC':
-            # Swap 80% of USDC to USDT
-            amount_to_buy = self.wallet.balances[funding_token] / 1e6 
-            self.simulate_swap('USDC', 'USDT', amount_to_buy, price)  # Simulate the swap
+            # Swap 100% of USDC to USDT or DAI based on best price
+            amount_to_sell = self.wallet.balances[funding_token] / 1e6 
+            self.simulate_swap('USDC', 'USDT' if price_usdt > price_dai else 'DAI', amount_to_sell, best_price)  # Simulate the swap
 
         elif funding_token == 'USDT':
-            # Swap 80% of USDT to USDC
+            # Swap 100% of USDT to USDC or DAI based on best price
             amount_to_sell = self.wallet.balances[funding_token] / 1e6 
-            self.simulate_swap('USDT', 'USDC', amount_to_sell, price)  # Simulate the swap
+            self.simulate_swap('USDT', 'USDC' if price_usdc > price_dai else 'DAI', amount_to_sell, best_price)  # Simulate the swap
+
+        elif funding_token == 'DAI':
+            # Swap 100% of DAI to USDT or USDC based on best price
+            amount_to_sell = self.wallet.balances[funding_token] / 1e6 
+            self.simulate_swap('DAI', 'USDT' if price_usdt > price_usdc else 'USDC', amount_to_sell, best_price)  # Simulate the swap
+            return
 
         # Randomize gas price for this transaction
         self.gas_price_per_transaction = fetch_gas_price()  # Get a new random gas price

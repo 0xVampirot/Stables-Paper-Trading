@@ -32,17 +32,20 @@ class HotWallet:
         self.account = self.web3.eth.account.from_key(private_key)
         self.balances = {
             'USDC': 0,  # Starting balance in USDC
-            'USDT': 0   # Starting balance in USDT
+            'USDT': 0,   # Starting balance in USDT
+            'DAI': 0
         }
         self.update_balances()
 
     def update_balances(self):
         # Fetch balances from the blockchain
-        self.balances['USDC'] = 100000000
+        self.balances['USDC'] = 000000000
+        self.balances['USDT'] = 00000000
+        self.balances['DAI'] = 100000000
         # self.balances['USDC'] = self.get_token_balance('0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238')  # Replace with actual USDC test contract address on Sepolia
         # self.balances['USDT'] = self.get_token_balance(Web3.to_checksum_address('0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0'))
-        self.balances['USDT'] = 00000000# Replace with actual USDT test contract address on Sepolia
-        logging.info(f"Updated balances: USDC: {self.balances['USDC'] / 1e6:.4f}, USDT: {self.balances['USDT'] / 1e6:.4f}")
+        # Replace with actual USDT test contract address on Sepolia
+        logging.info(f"Updated balances: USDC: {self.balances['USDC'] / 1e6:.4f}, USDT: {self.balances['USDT'] / 1e6:.4f}, DAI: {self.balances['DAI'] / 1e6:.4f}")
 
     def get_token_balance(self, token_address):
         # Implement ERC20 balanceOf call

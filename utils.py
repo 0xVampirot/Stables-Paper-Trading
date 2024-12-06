@@ -6,8 +6,8 @@ def fetch_market_price(market_pair):
 
 def fetch_gas_price():
     """Randomize gas price within a realistic range for the Optimism chain."""
-    return random.uniform(1000, 10000)  # Random gas price between 10 and 100 Gwei
+    return random.uniform(100, 1000)  # Random gas price between 10 and 100 Gwei
 
 def fetch_eth_price_in_usdc():
     """Simulate fetching the current ETH price in USDC."""
-    return random.uniform(5000, 6000)  # Example range for ETH price in USDC
+    return random.uniform(3000, 4000)  # Example range for ETH price in USDC

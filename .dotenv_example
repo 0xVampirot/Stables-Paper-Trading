@@ -1,0 +1,2 @@
+PRIVATE_KEY = private_key_of_wallet
+PROVIDER_URL = rpc_url

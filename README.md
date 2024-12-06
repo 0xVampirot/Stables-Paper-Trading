@@ -6,9 +6,17 @@ This paper trading bot simulates a market-making strategy for trading stablecoin
 
 ## Features
 
-- Simulates buying stablecoins when the market price is less than 1.
-- Simulates selling stablecoins when the market price is greater than 1.
-- Executes trades based on 80% of available balance or portfolio amount.
+2 Stables (i.e. USDC/USDT):
+- Simulates buying stablecoins when the market price is less than 1 between the pair.
+- Simulates selling stablecoins when the market price is greater than 1 between the pair.
+- Executes trades based on 100% of available balance or portfolio amount.
+- Tracks cumulative profit and loss over time.
+- Outputs detailed trade information, including market prices, amounts traded, costs, revenues, and P/L.
+
+3 Stables (i.e. USDC/USDT/DAI):
+- Finds the biggest stable token amount in the wallet.
+- Simulates finding the best market price at or greater than 1 between the pairs.
+- Executes trades based on 100% of available balance amount.
 - Tracks cumulative profit and loss over time.
 - Outputs detailed trade information, including market prices, amounts traded, costs, revenues, and P/L.
 
@@ -16,6 +24,8 @@ This paper trading bot simulates a market-making strategy for trading stablecoin
 
 - Python 3.x
 - `random` library (included in Python standard library)
+- `python-dotenv` library
+- `web3` library
 
 ## Installation
 
@@ -28,7 +38,7 @@ This paper trading bot simulates a market-making strategy for trading stablecoin
 ### Run the bot:
 Simply execute the Python script to start simulating trades:
     ```bash
-    python paper_trading_bot.py
+    python trading_bot.py
     ```
 
 ## Observe Output:
@@ -39,14 +49,17 @@ The bot will fetch simulated market prices and execute trades based on the defin
 - Total costs and revenues.
 - Cumulative profit and loss.
 
-### Trading Strategy
-- Buying: The bot will buy stablecoins when the market price is less than 1. It calculates the amount to buy as 80% of the available balance divided by the current market price.
-- Selling: The bot will sell stablecoins when the market price is greater than 1. It calculates the amount to sell as 80% of USDT currently held in the portfolio.
+### Trading Strategy for 2 Stables:
+- Buying: The bot will buy stablecoins when the market price is less than 1. It calculates the amount to buy as 80%/100% of the available balance divided by the current market price.
+- Selling: The bot will sell stablecoins when the market price is greater than 1. It calculates the amount to sell as 80%/100% of USDT currently held in the portfolio.
 - Profit and Loss Calculation: After each sell transaction, the bot calculates profit or loss based on the average cost of stablecoins sold compared to their selling price.
 
+### Trading Strategy for 3+ Stables:
+- Swapping: The bot will look at the highest balance stable coin existing in the wallet and fetch the market price of the two other stablecoins.If the market price is greater than 1, it will swap according to the better rate if both market prices are greater than 1. 
+- Profit and Loss Calculation: After each swap, the bot calculates profit or loss based on the average cost of stablecoins sold compared to their selling price.
+
 ## Future Enhancements
-- Use hot wallet to test with test tokens.
-- Add logging functionality for better tracking of trades and performance.
+- Use hot wallet to test with an Aggregator's API.
 
 ### License
 This project is licensed under the MIT License - see the LICENSE file for details.
