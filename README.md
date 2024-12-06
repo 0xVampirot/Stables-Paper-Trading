@@ -21,8 +21,8 @@ This paper trading bot simulates a market-making strategy for trading stablecoin
 
 ### Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/paper-trading-bot.git
-   cd paper-trading-bot
+   git https://github.com/0xVampirot/Stables-Paper-Trading.git
+   cd stables-paper-trading
    ```
 
 ### Run the bot:
