@@ -38,7 +38,10 @@ This paper trading bot simulates a market-making strategy for trading stablecoin
 ### Run the bot:
 Simply execute the Python script to start simulating trades:
     ```bash
-    python trading_bot.py
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+    python3 main.py
     ```
 
 ## Observe Output:

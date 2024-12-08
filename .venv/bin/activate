@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/reneec/Documents/to1/.venv"
+VIRTUAL_ENV="/Users/reneec/Documents/stables-paper-trading/.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

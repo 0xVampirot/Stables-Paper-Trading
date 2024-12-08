@@ -98,8 +98,8 @@ class StableTradingBot:
 
     def _validate_trade_conditions(self, funding_token: str, swap_price: float) -> bool:
         """Validate if trade conditions are met."""
+        # Check minimum balance
         if self.wallet.balances[funding_token] < MIN_BALANCE * 10**TOKEN_DECIMALS:
-            # Replace logger.warning with log_trade
             self._log_failed_trade(
                 self._get_normalized_balances(),
                 None,
@@ -109,14 +109,14 @@ class StableTradingBot:
             )
             return False
 
-        if swap_price < PRICE_THRESHOLD:
-            # Replace logger.info with log_trade
+        # Only trade when price < 1 (buying at a discount)
+        if swap_price >= PRICE_THRESHOLD:
             self._log_failed_trade(
                 self._get_normalized_balances(),
                 None,
                 None,
                 funding_token,
-                "Market price is not favorable for trading."
+                f"Market price {swap_price:.6f} >= {PRICE_THRESHOLD:.4f}, not profitable to trade"
             )
             return False
 
@@ -149,13 +149,13 @@ class StableTradingBot:
         return True
 
     def _execute_trade(self, funding_token: str, to_token: str, swap_price: float,
-                      starting_balances: Dict[str, float], market_prices: Dict[str, float]) -> None:
+                  starting_balances: Dict[str, float], market_prices: Dict[str, float]) -> None:
         """Execute the trade with the given parameters."""
         amount_to_sell = self.wallet.balances[funding_token] / 10**TOKEN_DECIMALS
         gas_cost = self._calculate_gas_cost()
 
-        # Simulate the swap
-        estimated_amount = amount_to_sell * swap_price
+        # When price < 1, we get more of the other token
+        estimated_amount = amount_to_sell / swap_price  # Changed from multiplication to division
         estimated_amount_after_gas = estimated_amount - gas_cost
 
         if not self._validate_swap_profitability(estimated_amount_after_gas, amount_to_sell, gas_cost):
@@ -163,7 +163,7 @@ class StableTradingBot:
 
         # Execute the swap
         self._perform_swap(funding_token, to_token, amount_to_sell, 
-                          estimated_amount_after_gas)
+                        estimated_amount_after_gas)
 
         # Log the successful trade
         ending_balances = self._get_normalized_balances()
@@ -179,7 +179,7 @@ class StableTradingBot:
             swapped_to_token=to_token,
             swap_price=swap_price,
             gas_cost=gas_cost,
-            gas_cost_gwei=self.gas_price_per_transaction,  # Add this line
+            gas_cost_gwei=self.gas_price_per_transaction,
             ending_token=to_token,
             ending_amount=estimated_amount_after_gas,
             pnl_from_swap=pnl_from_swap,
